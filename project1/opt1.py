@@ -12,7 +12,6 @@ def log(msg):
         f.write(f"{datetime.now()} - {msg}\n")
     print(msg)
 
-# --- Очистка временных файлов ---
 def clean_temp_dirs():
     log("=== Очистка временных файлов ===")
     for d in TEMP_DIRS:
@@ -30,7 +29,6 @@ def clean_temp_dirs():
                         pass
     log("Очистка завершена")
 
-# --- Мониторинг ресурсов через команду Linux ---
 def monitor_resources():
     log("=== Мониторинг ресурсов ===")
     log("CPU и память (через top):")
@@ -38,7 +36,6 @@ def monitor_resources():
     log("Диск:")
     os.system("df -h /")
 
-# --- Поиск больших файлов ---
 def find_big_files(path="/home"):
     log(f"=== Поиск файлов >{BIG_FILE_SIZE_MB}MB ===")
     for root, dirs, files in os.walk(path):
@@ -51,7 +48,6 @@ def find_big_files(path="/home"):
             except:
                 continue
 
-# --- Очистка кеша Linux ---
 def drop_caches():
     log("=== Очистка кеша Linux ===")
     if os.geteuid() != 0:
