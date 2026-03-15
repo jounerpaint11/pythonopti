@@ -1,13 +1,5 @@
 # pythonopti
 
-Ubuntu / Debian / Mint	sudo apt update && sudo apt install python3-tk
-
-Fedora	sudo dnf install python3-tkinter
-
-Arch Linux	sudo pacman -S tk
-
-CentOS / RHEL	sudo yum install python3-tkinter
-
 1️⃣ Скачать проект
 
 Если установлен git:
