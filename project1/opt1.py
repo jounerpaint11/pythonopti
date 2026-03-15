@@ -2,17 +2,19 @@
 
 import os
 import shutil
+import subprocess
 from datetime import datetime
 
-REPORT_FILE = "/tmp/system_optimization_report.txt"
+REPORT_FILE = os.path.expanduser("~/system_optimization_report.txt")
 BIG_FILE_SIZE_MB = 100
 TEMP_DIRS = ["/tmp", os.path.expanduser("~/.cache")]
 
 
 def log(msg):
+    formatted_msg = str(msg).strip()
     with open(REPORT_FILE, "a") as f:
-        f.write(f"{datetime.now()} - {msg}\n")
-    print(msg)
+        f.write(f"{datetime.now()} - {formatted_msg}\n")
+    print(formatted_msg)
 
 
 def clean_temp_dirs():
@@ -20,18 +22,17 @@ def clean_temp_dirs():
 
     for d in TEMP_DIRS:
         if os.path.exists(d):
-            for root, dirs, files in os.walk(d):
-
+            for root, dirs, files in os.walk(d, topdown=False):
                 for name in files:
                     try:
                         os.remove(os.path.join(root, name))
-                    except:
+                    except Exception:
                         pass
 
                 for name in dirs:
                     try:
                         shutil.rmtree(os.path.join(root, name))
-                    except:
+                    except Exception:
                         pass
 
     log("Очистка завершена")
@@ -41,10 +42,18 @@ def monitor_resources():
     log("=== Мониторинг ресурсов ===")
 
     log("CPU и память:")
-    os.system("top -b -n1 | head -n 10")
+    try:
+        top_output = subprocess.check_output("top -b -n1 | head -n 10", shell=True, text=True)
+        log(top_output)
+    except Exception as e:
+        log(f"Ошибка получения данных CPU: {e}")
 
     log("Диск:")
-    os.system("df -h /")
+    try:
+        df_output = subprocess.check_output("df -h /", shell=True, text=True)
+        log(df_output)
+    except Exception as e:
+        log(f"Ошибка получения данных диска: {e}")
 
 
 def find_big_files(path="/home"):
@@ -54,24 +63,25 @@ def find_big_files(path="/home"):
         for name in files:
             try:
                 full_path = os.path.join(root, name)
-                size_mb = os.path.getsize(full_path) / (1024 * 1024)
+                if not os.path.islink(full_path):
+                    size_mb = os.path.getsize(full_path) / (1024 * 1024)
 
-                if size_mb > BIG_FILE_SIZE_MB:
-                    log(f"{full_path} - {size_mb:.2f} MB")
+                    if size_mb > BIG_FILE_SIZE_MB:
+                        log(f"{full_path} - {size_mb:.2f} MB")
 
-            except:
+            except Exception:
                 continue
 
 
 def drop_caches():
     log("=== Очистка кеша Linux ===")
 
-    if os.geteuid() != 0:
-        log("Нужны root-права для очистки кеша")
-        return
 
-    os.system("sync && echo 3 | sudo tee /proc/sys/vm/drop_caches")
-    log("Кеш очищен")
+    try:
+        subprocess.run("sync && echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null", shell=True, check=True)
+        log("Кеш очищен")
+    except subprocess.CalledProcessError:
+        log("Ошибка: не удалось очистить кеш (отменено пользователем или нет прав)")
 
 
 def show_report():
